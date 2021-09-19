@@ -43,7 +43,7 @@ class TreeNode:
 
 class ID3:
 	# Option 0: Entropy, option 1: ME, Option 2: GI
-	def __init__(self, option=1, max_depth = 6):
+	def __init__(self, option=1, max_depth = 10):
 		self.option = option
 		self.max_depth = max_depth
 	
@@ -56,34 +56,37 @@ class ID3:
 		self.option = option
 
 	def calc_entropy(self, data, label_dict):
-		label_values = label_dict['label']
+		label_key = list(label_dict.keys())[0]
+		label_values = label_dict[label_key]
 		if len(data) == 0:
 			return 0
 		entropy = 0
 		for value in label_values:
-			p = len(data[data['label'] == value]) / len(data)
+			p = len(data[data[label_key] == value]) / len(data)
 			if p != 0:
 				entropy += -p * math.log2(p)
 		return entropy
 	
 	def calc_ME(self, data, label_dict):
-		label_values = label_dict['label']
+		label_key = list(label_dict.keys())[0]
+		label_values = label_dict[label_key]
 		if len(data) == 0:
 			return 0
 		max_p = 0
 		for value in label_values:
-			p = len(data[data['label'] == value]) / len(data)
+			p = len(data[data[label_key] == value]) / len(data)
 			max_p = max(max_p, p)
 		return 1 - max_p
 		
 	
 	def calc_GI(self, data, label_dict):
-		label_values = label_dict['label']
+		label_key = list(label_dict.keys())[0]
+		label_values = label_dict[label_key]
 		if len(data) == 0:
 			return 0
 		temp = 0
 		for value in label_values:
-			p = len(data[data['label'] == value]) / len(data)
+			p = len(data[data[label_key] == value]) / len(data)
 			temp += p**2
 		return 1 - temp
 	
@@ -106,11 +109,11 @@ class ID3:
 			heuristics = self.calc_GI
 
 		
-
-		label_values = label_dict['label']
+		label_key = list(label_dict.keys())[0]
+		label_values = label_dict[label_key]
 		
 		if len(data) > 0:
-			majority_label = data['label'].value_counts().idxmax()
+			majority_label = data[label_key].value_counts().idxmax()
 
 		measure = heuristics(data, label_dict)
 
