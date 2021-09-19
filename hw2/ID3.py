@@ -148,7 +148,7 @@ class ID3:
 			child_node.set_label(majority_label)
 			child_node.set_depth(dt_node.get_depth() + 1)
 			children[val] = child_node
-			primary_node = {'data': data[data[max_f_name] == val],'features_dict': copy.deepcopy(rf), 'label_dict': label_dict, 'dt_node': child_node}
+			primary_node = {'data': data[data[max_f_name] == val],'features_dict': rf, 'label_dict': label_dict, 'dt_node': child_node}
 			next_nodes.append(primary_node)
 		
 		# set chiildren nodes
@@ -159,17 +159,19 @@ class ID3:
 	
 	# construct the decision tree
 	def construct_dt(self, data, features_dict, label_dict):
-		Q = []
+
+		# use bfs to construct the tree
+		import queue
 		dt_root = TreeNode()
 		dt_root.set_depth(0)
-
 		root = {'data': data,'features_dict': features_dict, 'label_dict': label_dict, 'dt_node': dt_root}
-		Q.append(root)
-		while len(Q) > 0:
-			cur_node = Q.pop(0)
-			nodes = self.main_split(cur_node)
-			for node in nodes:
-				Q.append(node)
+
+		Q = queue.Queue()
+		Q.put(root)
+		while not Q.empty():
+			cur_node = Q.get()
+			for node in self.main_split(cur_node):
+				Q.put(node)
 		return dt_root
 	
 
