@@ -1,0 +1,183 @@
+import pandas as pd
+import math
+import copy
+
+# TreeNode class 
+
+class TreeNode:
+	def __init__(self):
+		self.feature = None
+		self.children = None
+		self.depth = -1
+		self.is_leaf_node = False
+		self.label = None
+	
+	# functions to set values
+	def set_feature(self, feature):
+		self.feature = feature
+
+	def set_children(self, children):
+		self.children = children
+
+	def set_depth(self, depth):
+		self.depth = depth
+
+	def set_leaf(self, status):
+		self.is_leaf_node = status
+
+	def set_label(self, label):
+		self.label = label
+
+	# functions to return values
+	def is_leaf(self):
+		return self.is_leaf_node
+
+	def get_depth(self):
+		return self.depth
+
+	def get_label(self):
+		return self.label 
+
+
+# algorithum implementation
+
+class ID3:
+	# Option 0: Entropy, option 1: ME, Option 2: GI
+	def __init__(self, option=1, max_depth = 6):
+		self.option = option
+		self.max_depth = max_depth
+	
+	
+	def set_max_depth(self, max_depth):
+		self.max_depth = max_depth
+
+
+	def set_option(self, option):
+		self.option = option
+
+	def calc_entropy(self, data, label_dict):
+		label_values = label_dict['label']
+		if len(data) == 0:
+			return 0
+		entropy = 0
+		for value in label_values:
+			p = len(data[data['label'] == value]) / len(data)
+			if p != 0:
+				entropy += -p * math.log2(p)
+		return entropy
+	
+	def calc_ME(self, data, label_dict):
+		label_values = label_dict['label']
+		if len(data) == 0:
+			return 0
+		max_p = 0
+		for value in label_values:
+			p = len(data[data['label'] == value]) / len(data)
+			max_p = max(max_p, p)
+		return 1 - max_p
+		
+	
+	def calc_GI(self, data, label_dict):
+		label_values = label_dict['label']
+		if len(data) == 0:
+			return 0
+		temp = 0
+		for value in label_values:
+			p = len(data[data['label'] == value]) / len(data)
+			temp += p**2
+		return 1 - temp
+	
+
+	def main_split(self, cur_node):
+		next_nodes = []
+		features_dict = cur_node['features_dict']
+		label_dict = cur_node['label_dict']
+		dt_node = cur_node['dt_node']
+		data = cur_node['data']
+
+		
+		# calcualte heuristics for futher splits
+		if self.option == 0:
+			heuristics = self.calc_entropy
+		if self.option == 1:
+			heuristics = self.calc_ME
+		if self.option == 2:
+			heuristics = self.calc_GI
+
+		
+
+		label_values = label_dict['label']
+		
+		if len(data) > 0:
+			majority_label = data['label'].value_counts().idxmax()
+
+		measure = heuristics(data, label_dict)
+
+		# check leaf nodes
+		if measure == 0 or dt_node.get_depth() == self.max_depth or len(features_dict) == 0:
+			dt_node.set_leaf(True)
+			if len(data) > 0:
+				dt_node.set_label(majority_label)
+			return next_nodes
+
+		max_gain = float('-inf')
+		max_f_name = ''
+
+		for f_name, f_values in features_dict.items():
+			gain = 0
+			for val in f_values:
+				subset = data[data[f_name] == val]
+				p = len(subset.index) / len(data)
+				gain += p * heuristics(subset, label_dict)
+
+			# get maximum gain and feature name	
+			gain = measure - gain
+			if gain > max_gain:
+				max_gain = gain
+				max_f_name = f_name
+		
+		children = {}
+		dt_node.set_feature(max_f_name)
+
+		# remove the feature that has been splitted on, get remaining features
+		rf = copy.deepcopy(features_dict)
+		rf.pop(max_f_name, None)
+	
+		for val in features_dict[max_f_name]:
+			child_node = TreeNode()
+			child_node.set_label(majority_label)
+			child_node.set_depth(dt_node.get_depth() + 1)
+			children[val] = child_node
+			primary_node = {'data': data[data[max_f_name] == val],'features_dict': copy.deepcopy(rf), 'label_dict': label_dict, 'dt_node': child_node}
+			next_nodes.append(primary_node)
+		
+		# set chiildren nodes
+		dt_node.set_children(children)
+		
+		return next_nodes
+	   
+	
+	# construct the decision tree
+	def construct_dt(self, data, features_dict, label_dict):
+		Q = []
+		dt_root = TreeNode()
+		dt_root.set_depth(0)
+
+		root = {'data': data,'features_dict': features_dict, 'label_dict': label_dict, 'dt_node': dt_root}
+		Q.append(root)
+		while len(Q) > 0:
+			cur_node = Q.pop(0)
+			nodes = self.main_split(cur_node)
+			for node in nodes:
+				Q.append(node)
+		return dt_root
+	
+
+	def classify_one(self, dt, data):
+		temp = dt
+		while not temp.is_leaf(): 
+			temp = temp.children[data[temp.feature]]
+		return temp.label
+
+	def predict(self, dt, data):
+		return data.apply(lambda row: self.classify_one(dt, row), axis=1)
