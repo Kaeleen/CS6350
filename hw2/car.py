@@ -22,23 +22,27 @@ features_dict = {'buying': ['vhigh', 'high', 'med', 'low'],
 
 label_dict = {'label': ['unacc', 'acc', 'good', 'vgood']}
 
-train_res = [[0 for x in range(6)] for y in range(3)]
-test_res = [[0 for x in range(6)] for y in range(3)]
+train_res = [[0 for _ in range(3)] for _ in range(6)]
+test_res = [[0 for _ in range(3)] for _ in range(6)]
 
 
 for option in range(3):
 	for max_depth in range(6):
 		
-		dt_generator = id3.ID3(option=option, max_depth=max_depth+1)
+		dt_generator = id3.ID3(option, max_depth+1)
 		
 		dt_construction = dt_generator.construct_dt(train_data, features_dict, label_dict)
 		
 		# prediction results for train data and test data
-		train_data['label2']= dt_generator.predict(dt_construction, train_data)
-		train_res[option][max_depth] = train_data.apply(lambda row: 1 if row['label'] == row['label2'] else 0, axis=1).sum() / train_size
+		train_data['pred_label']= dt_generator.predict(dt_construction, train_data)
+		train_data['result'] = (train_data[['label']].values == train_data[['pred_label']].values).all(axis=1).astype(int)
+		prediction_train = len(train_data[train_data['result'] == 1]) / train_size
+		train_res[max_depth][option] = round(prediction_train,3)
 		
-		test_data['label2']= dt_generator.predict(dt_construction, test_data)
-		test_res[option][max_depth] = test_data.apply(lambda row: 1 if row['label'] == row['label2'] else 0, axis=1).sum() / test_size
+		test_data['pred_label']= dt_generator.predict(dt_construction, test_data)
+		test_data['result'] = (test_data[['label']].values == test_data[['pred_label']].values).all(axis=1).astype(int)
+		prediction_test = len(test_data[test_data['result'] == 1]) / test_size
+		test_res[max_depth][option] = prediction_test
 
 print("results for train data: ")
 print(train_res)

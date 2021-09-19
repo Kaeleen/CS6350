@@ -97,6 +97,7 @@ class ID3:
 
 		
 		# calcualte heuristics for futher splits
+		
 		if self.option == 0:
 			heuristics = self.calc_entropy
 		if self.option == 1:
@@ -160,7 +161,7 @@ class ID3:
 	# construct the decision tree
 	def construct_dt(self, data, features_dict, label_dict):
 
-		# use bfs to construct the tree
+		# use queue and bfs
 		import queue
 		dt_root = TreeNode()
 		dt_root.set_depth(0)
