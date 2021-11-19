@@ -136,36 +136,36 @@ def predict_gaussian_kernel(alpha, x0, y0, x, gamma):
 
 
 def Perceptron_Kernel_Gaussian(x, y, g, T):
-    c = np.zeros(x.shape[0])
-    idxs = np.arange(x.shape[0])
+	c = np.zeros(x.shape[0])
+	idxs = np.arange(x.shape[0])
 
-    k = gaussian_kernel(x, x, g)
-    
-    for epoch in range(T):
-     
-        np.random.shuffle(idxs)
+	k = gaussian_kernel(x, x, g)
+	
+	for epoch in range(T):
+	 
+		np.random.shuffle(idxs)
 
-        
-        for i in idxs:
-            p = np.sum(c * y * k[:,i]) 
-            sgn = 1 if p > 0 else -1
-            if sgn != y[i]:
-                c[i] += 1
-    return c
+		
+		for i in idxs:
+			p = np.sum(c * y * k[:,i]) 
+			sgn = 1 if p > 0 else -1
+			if sgn != y[i]:
+				c[i] += 1
+	return c
 
 
 def predict_Perceptron_Kernel_Gaussian(x, c, x_train, y, g):
-    predictions = []
-    for ex in x:
-        p = 0
-        for i in range(c.shape[0]):
-            k = math.exp(-1 * np.linalg.norm(x_train[i] - ex)**2 / g)
-            p += np.asscalar(c[i] * y[i] * k)
-        if p < 0:
-            predictions.append(-1)
-        else:
-            predictions.append(1)
-    return predictions
+	predictions = []
+	for ex in x:
+		p = 0
+		for i in range(c.shape[0]):
+			k = math.exp(-1 * np.linalg.norm(x_train[i] - ex)**2 / g)
+			p += np.asscalar(c[i] * y[i] * k)
+		if p < 0:
+			predictions.append(-1)
+		else:
+			predictions.append(1)
+	return predictions
 
 
 
@@ -258,13 +258,13 @@ print("********** Part 3(d)**********")
 
 
 for g in gamma_set:
-    c = Perceptron_Kernel_Gaussian(X_train, Y_train, g, T)
-    predict_train = predict_Perceptron_Kernel_Gaussian(X_train, c, X_train, Y_train, g)
-    missed = sum(abs(predict_train-Y_train) / 2)
-    train_err = missed/len(Y_train)
+	c = Perceptron_Kernel_Gaussian(X_train, Y_train, g, T)
+	predict_train = predict_Perceptron_Kernel_Gaussian(X_train, c, X_train, Y_train, g)
+	missed = sum(abs(predict_train-Y_train) / 2)
+	train_err = missed/len(Y_train)
 
-    predict_test = predict_Perceptron_Kernel_Gaussian(X_test, c, X_train, Y_train, g)
-    missed = sum(abs(predict_test-Y_test) / 2)
-    test_err = missed/len(Y_test)
-    
-    print('gamma: ', g, 'train_error: ', train_err, ' test_error: ', test_err)
+	predict_test = predict_Perceptron_Kernel_Gaussian(X_test, c, X_train, Y_train, g)
+	missed = sum(abs(predict_test-Y_test) / 2)
+	test_err = missed/len(Y_test)
+	
+	print('gamma: ', g, 'train_error: ', train_err, ' test_error: ', test_err)
