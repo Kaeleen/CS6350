@@ -67,7 +67,7 @@ depth = [3, 5, 9]
 width = [5, 10, 25, 50, 100]
 
 print()
-print("PyTorch using RELU activation function")
+print("PyTorch using tanh activation function")
 
 print("Depth\tWidth\tTrain Error\tTest Error")
 for d in depth:
